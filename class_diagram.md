@@ -14,7 +14,9 @@ direction LR
 
     class Discussion {
 		string id
+		string discussionType
 		string[] usersIds
+		string[]? adminsIds
     }
 
     class User {

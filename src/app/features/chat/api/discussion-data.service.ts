@@ -1,5 +1,24 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import {
+  CollectionReference,
+  DocumentReference,
+  Firestore,
+  addDoc,
+  arrayRemove,
+  arrayUnion,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
+} from '@angular/fire/firestore';
+import type { AppUser } from '@chat-ne/features/user/domain';
+import { $firebaseCollections } from '@chat-ne/shared/constants';
 import { PageRequest } from '@chat-ne/shared/types';
+import { HotToastService } from '@ngneat/hot-toast';
+import { Subject } from 'rxjs';
 import { Discussion } from '../domain/';
 
 /**
@@ -7,15 +26,121 @@ import { Discussion } from '../domain/';
  */
 @Injectable()
 export class DiscussionDataService {
-  createDiscussion(discussion: Discussion) {}
+  private _firestore = inject(Firestore);
+  private _toast = inject(HotToastService);
 
-  deleteDiscussion(discussionId: string) {}
+  async createDiscussion(discussion: Discussion) {
+    const discussionCollection = collection(
+      this._firestore,
+      $firebaseCollections.discussions,
+    );
 
-  updateDiscussion(discussionId: string, discussion: Discussion) {}
+    try {
+      await addDoc(discussionCollection, discussion);
+      return true;
+    } catch (error) {
+      this._toast.error(
+        'Une erreur est survenue lors de la création de la discussion',
+      );
+      return false;
+    }
+  }
 
-  getDiscussion(discussionId: string) {}
+  async deleteDiscussion(discussionId: string) {
+    const discussionRef = doc(
+      this._firestore,
+      $firebaseCollections.discussions,
+      discussionId,
+    );
 
-  getDiscussions(page: PageRequest) {}
+    try {
+      await deleteDoc(discussionRef);
+      return true;
+    } catch (error) {
+      this._toast.error(
+        'Une erreur est survenue lors de la suppression de la discussion',
+      );
+      return false;
+    }
+  }
 
-  addUserToDiscussion(discussionId: string, userId: string) {}
+  getDiscussion(discussionId: string) {
+    const discussionRef = doc(
+      this._firestore,
+      $firebaseCollections.discussions,
+      discussionId,
+    ) as DocumentReference<Discussion>;
+
+    return discussionRef;
+  }
+
+  getDiscussions(userId: string, page: PageRequest) {
+    const discussions$ = new Subject<Discussion[]>();
+
+    const discussionCollection = collection(
+      this._firestore,
+      $firebaseCollections.discussions,
+    ) as CollectionReference<Discussion>;
+
+    const q = query<Discussion>(
+      discussionCollection,
+      where('usersIds', 'array-contains', userId),
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const _data = querySnapshot.docs.map((elt) => {
+        return {
+          ...elt.data(),
+        };
+      });
+    });
+
+    return [discussions$, unsubscribe];
+  }
+
+  /**
+   * Ajoute un nouvel {@link AppUser} à une {@link Discussion} de type `group`.
+   */
+  async addUserToDiscussion(discussionId: string, userId: string) {
+    const discussionRef = doc(
+      this._firestore,
+      $firebaseCollections.discussions,
+      discussionId,
+    ) as DocumentReference<Discussion>;
+
+    try {
+      await updateDoc<Discussion>(discussionRef, {
+        usersIds: arrayUnion(userId),
+      });
+
+      this._toast.success('Utilisateur ajouté');
+    } catch (error) {
+      this._toast.error(
+        "Une erreur est survenue lors de l'ajout de l'utilisateur",
+      );
+    }
+  }
+
+  /**
+   * Supprime un {@link AppUser} d'une {@link Discussion} de type `group`.
+   * @param discussionId L'identifiant de la {@link Discussion} à modifier.
+   * @param userId L'identifiant de l'{@link AppUser} à supprimer.
+   */
+  async deleteUserFromDiscussion(discussionId: string, userId: string) {
+    const discussionRef = doc(
+      this._firestore,
+      $firebaseCollections.discussions,
+      discussionId,
+    ) as DocumentReference<Discussion>;
+
+    try {
+      await updateDoc<Discussion>(discussionRef, {
+        usersIds: arrayRemove(userId),
+      });
+    } catch (error) {
+      this._toast.error(
+        "Une erreur est survenue lors de la suppression de l'utilisateur",
+      );
+    }
+  }
 }
