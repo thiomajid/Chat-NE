@@ -7,11 +7,15 @@ import {
   collection,
   deleteDoc,
   doc,
+  onSnapshot,
+  query,
   serverTimestamp,
   updateDoc,
+  where,
 } from '@angular/fire/firestore';
 import { $firebaseCollections } from '@chat-ne/shared/constants';
 import { HotToastService } from '@ngneat/hot-toast';
+import { Subject } from 'rxjs';
 import { ChatMessage } from '../domain/';
 
 /**
@@ -21,6 +25,29 @@ import { ChatMessage } from '../domain/';
 export class ChatDataService {
   private _firestore = inject(Firestore);
   private _toast = inject(HotToastService);
+
+  getMessagesByDiscussion(discussionId: string) {
+    const messages$ = new Subject<ChatMessage[]>();
+    const messageCollection = collection(
+      this._firestore,
+      $firebaseCollections.discussions,
+    ) as CollectionReference<ChatMessage>;
+
+    const q = query(
+      messageCollection,
+      where('discussionId', '==', discussionId),
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const messages: ChatMessage[] = [];
+      querySnapshot.forEach((doc) => {
+        messages.push(doc.data());
+      });
+      messages$.next(messages);
+    });
+
+    return [messages$, unsubscribe];
+  }
 
   async sendMessage(message: ChatMessage) {
     const messsageCollection = collection(

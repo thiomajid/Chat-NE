@@ -9,6 +9,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   onSnapshot,
   query,
   updateDoc,
@@ -16,7 +17,6 @@ import {
 } from '@angular/fire/firestore';
 import type { AppUser } from '@chat-ne/features/user/domain';
 import { $firebaseCollections } from '@chat-ne/shared/constants';
-import { PageRequest } from '@chat-ne/shared/types';
 import { HotToastService } from '@ngneat/hot-toast';
 import { Subject } from 'rxjs';
 import { Discussion } from '../domain/';
@@ -64,17 +64,19 @@ export class DiscussionDataService {
     }
   }
 
-  getDiscussion(discussionId: string) {
+  async getDiscussion(discussionId: string) {
     const discussionRef = doc(
       this._firestore,
       $firebaseCollections.discussions,
       discussionId,
     ) as DocumentReference<Discussion>;
 
-    return discussionRef;
+    const _discussion = await getDoc(discussionRef);
+
+    return structuredClone(_discussion.data());
   }
 
-  getDiscussions(userId: string, page: PageRequest) {
+  getDiscussionsByUser(userId: string) {
     const discussions$ = new Subject<Discussion[]>();
 
     const discussionCollection = collection(
@@ -93,6 +95,8 @@ export class DiscussionDataService {
           ...elt.data(),
         };
       });
+
+      discussions$.next(_data);
     });
 
     return [discussions$, unsubscribe];
