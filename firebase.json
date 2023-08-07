@@ -1,0 +1,9 @@
+{
+  "hosting": [
+    {
+      "target": "chat-ne",
+      "source": ".",
+      "frameworksBackend": {}
+    }
+  ]
+}

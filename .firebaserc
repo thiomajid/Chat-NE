@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "chat-ne-8e7e8": {
+      "hosting": {
+        "chat-ne": [
+          "chat-ne-8e7e8"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "chat-ne-8e7e8"
+  }
+}

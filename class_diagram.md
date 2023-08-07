@@ -1,28 +1,29 @@
 ```mermaid
 classDiagram
+direction LR 
 
-    note "From Duck till Zebra"
-    Animal <|-- Duck
-    note for Duck "can fly\ncan swim\ncan dive\ncan help in debugging"
-    Animal <|-- Fish
-    Animal <|-- Zebra
-    Animal : +int age
-    Animal : +String gender
-    Animal: +isMammal()
-    Animal: +mate()
-    class Duck{
-        +String beakColor
-        +swim()
-        +quack()
-    }
-    class Fish{
-        -int sizeInFeet
-        -canEat()
-    }
-    class Zebra{
-        +bool is_wild
-        +run()
-    }
+    class Message {
+	string id
+        string content
+        string? fileUrl
+        Date sentAt
+        string senderId
+        string discussionId
+    }
 
+    class Discussion {
+		string id
+		string[] usersId
+    }
+
+    class User {
+		string id
+		string firstName
+		string lastName
+		string? pictureUrl
+    }
+
+	User "n"  --> "m" Discussion
+	Discussion "1"  --> "n" Message
 
 ```
