@@ -9,6 +9,7 @@ import {
 import { provideFirebase } from '@chat-ne/config/firebase';
 import { provideNgRx } from '@chat-ne/config/ngrx';
 import { APP_ROUTES } from './app.routes';
+import { provideNgNeat } from './config/ngneat';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,5 +21,6 @@ export const appConfig: ApplicationConfig = {
     // Custom
     provideNgRx(),
     provideFirebase(),
+    provideNgNeat(),
   ],
 };
